@@ -1,10 +1,21 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
 import dotenv from "dotenv";
-const app = express();
 dotenv.config();
+const app = express();
+const apiKey = process.env.api_key;
+const genres = ["fantasy", "mystery", "thriller", "drama", "romance",
+                "horror", "science fiction", "adventure", "poetry",
+                "history"
+];
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
+
+function randGenre(){
+    const randInd = Math.floor(Math.random() * genres.length);
+
+    return genres[randInd];
+}
 
 //for Express to get values using the POST method
 app.use(express.urlencoded({extended:true}));
@@ -18,8 +29,38 @@ const pool = mysql.createPool({
     waitForConnections: true
 });
 //routes
-app.get('/', (req, res) => {
-   res.render('home.ejs');
+app.get('/',async (req, res) => {
+    const genre = randGenre();
+
+    const params = new URLSearchParams({
+        //books with selected genre
+        q: `subject:${genre}`,
+        //most relevant first
+        orderBy: "relevance",
+        //books not magazines
+        printType: "books",
+        //only requests 20 but api allows maxResults to be up to 40
+        maxResults: "20",
+        key: apiKey
+    });
+
+    const apiUrl = `https://www.googleapis.com/books/v1/volumes?${params.toString()}`;
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    //the .filter makes sure that books that are missing the information we want is removed
+    const books = (data.items ?? []).filter((book)=> {
+        const bookInfo = book.volumeInfo;
+
+        return(
+            bookInfo?.title &&
+            bookInfo?.authors?.length >0 &&
+            bookInfo?.imageLinks?.thumbnail
+        );
+    }).slice(0,3);
+    // line above makes it so only top 3 books are shown
+
+    res.render('home.ejs', {genre, books});
 });
 
 app.get('/want', (req, res) => {

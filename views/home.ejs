@@ -16,7 +16,43 @@
 
 <body>
     <h1 class="text-center">My Library</h1>
-    <head>
-        <%- include('partials/navbar.ejs') %>
-    </head>
+    <%- include('partials/navbar.ejs') %>
+    
+    <main class="container mt-5">
+        <% if (genre) { %>
+            <h2 class="text-center text-capitalize mb-4">
+                Top 3 <%=genre %> Books
+            </h2>
+       <% } %>
+
+       <% if (books && books.length > 0 ) { %>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <% books.forEach((book)=> { %>
+                    <% const bookInfo = book.volumeInfo; %>
+
+                    <% const image =
+                    bookInfo.imageLinks.large ||
+                    bookInfo.imageLinks.medium ||
+                    bookInfo.imageLinks.small ||
+                    bookInfo.imageLinks.thumbnail;
+                    %>
+                    <div class="col mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <img src="<%= image.replace('http:', 'https:') %>"
+                            class="card-img-top book-cover"
+                            alt="Cover of <%= bookInfo.title %>">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">
+                                    <%= bookInfo.title %>
+                                </h5>
+                                <p class="card-text">
+                                    Author: <%= bookInfo.authors.join(", ") %>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+             <% }); %>
+            </div>
+     <%  } %>
+    </main>
 </body>

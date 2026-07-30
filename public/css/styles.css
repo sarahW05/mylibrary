@@ -1,0 +1,5 @@
+.book-cover{
+    height: 300px;
+    object-fit: contain;
+    padding: 15px;
+}
